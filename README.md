@@ -47,12 +47,12 @@ python3 -m http.server 8000
 ## How it works
 
 The renderer is deliberately old-fashioned. Scenes are drawn into a small
-`ImageData` buffer (300–400 pixels on the short edge) and nearest-neighbour
+`ImageData` buffer (200–400 pixels on the short edge) and nearest-neighbour
 upscaled, which keeps the chunky 1995 look and makes every pixel cheaper.
 
 | File | Job |
 | --- | --- |
-| `js/maze.js` | Recursive-backtracker maze, extra loop carving, weighted random walk, rounded Polyline path, and the camera walker. |
+| `js/maze.js` | Recursive-backtracker maze, extra loop carving, weighted random walk, rounded polyline path, and the camera walker. |
 | `js/screensaver.js` | Canvas raycaster: DDA wall casting, textured floor/ceiling projection, distance fog, face shading, and block-atlas sampling. |
 | `js/app.js` | Windows 95 desktop shell, window dragging, settings persistence, full-screen transitions, and screen-saver wake behaviour. |
 | `assets/blocks.png` | The 16 × 768 ClassicCraft block atlas, copied byte-for-byte. |
