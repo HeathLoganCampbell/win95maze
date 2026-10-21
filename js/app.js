@@ -412,7 +412,7 @@
     screensaver.start(settings).catch(function (error) {
       stopScreenSaver();
       startHint.classList.remove('is-gone');
-      startHint.innerHTML = 'Could not load the block textures.<br>' +
+      startHint.innerHTML = 'Could not load the maze assets.<br>' +
         'Serve this folder over HTTP (for example <b>python3 -m http.server</b>) and reload.';
       window.console.error(error);
     });

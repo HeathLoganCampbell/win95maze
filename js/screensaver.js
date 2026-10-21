@@ -47,6 +47,11 @@
     fast: 1.95
   };
 
+  var RAT_URL = 'assets/rat.png';
+  var RAT_FRAME_WIDTH = 40;
+  var RAT_FRAME_HEIGHT = 22;
+  var RAT_WORLD_HEIGHT = 0.6;
+
   function readTile(pixels, atlasWidth, slot) {
     var r = new Uint8Array(256);
     var g = new Uint8Array(256);
@@ -128,11 +133,49 @@
     });
   }
 
+  function loadRatSheet(url) {
+    return new Promise(function (resolve, reject) {
+      var image = new Image();
+
+      image.onload = function () {
+        var canvas = document.createElement('canvas');
+        canvas.width = image.naturalWidth;
+        canvas.height = image.naturalHeight;
+        var context = canvas.getContext('2d', { willReadFrequently: true });
+        context.drawImage(image, 0, 0);
+
+        var pixels;
+        try {
+          pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
+        } catch (error) {
+          reject(error);
+          return;
+        }
+
+        resolve({
+          data: pixels,
+          sheetWidth: canvas.width,
+          sheetHeight: canvas.height,
+          frameWidth: RAT_FRAME_WIDTH,
+          frameHeight: RAT_FRAME_HEIGHT,
+          frames: Math.max(1, Math.floor(canvas.width / RAT_FRAME_WIDTH))
+        });
+      };
+
+      image.onerror = function () {
+        reject(new Error('Could not load ' + url));
+      };
+
+      image.src = url;
+    });
+  }
+
   function Screensaver(canvas) {
     this.canvas = canvas;
     this.context = canvas.getContext('2d', { alpha: false });
     this.textures = null;
-    this.texturePromise = null;
+    this.ratSheet = null;
+    this.assetPromise = null;
 
     this.running = false;
     this.raf = 0;
@@ -143,10 +186,12 @@
     this.height = 0;
     this.imageData = null;
     this.framebuffer = null;
+    this.zBuffer = null;
 
     this.settings = null;
     this.maze = null;
     this.walker = null;
+    this.rats = [];
 
     this.viewportWidth = 0;
     this.viewportHeight = 0;
@@ -155,17 +200,21 @@
   }
 
   Screensaver.prototype.ready = function () {
-    if (this.textures) return Promise.resolve();
-    if (!this.texturePromise) {
+    if (this.textures && this.ratSheet) return Promise.resolve();
+    if (!this.assetPromise) {
       var self = this;
-      this.texturePromise = loadTextures(ATLAS_URL).then(function (textures) {
-        self.textures = textures;
+      this.assetPromise = Promise.all([
+        loadTextures(ATLAS_URL),
+        loadRatSheet(RAT_URL)
+      ]).then(function (assets) {
+        self.textures = assets[0];
+        self.ratSheet = assets[1];
       }).catch(function (error) {
-        self.texturePromise = null;
+        self.assetPromise = null;
         throw error;
       });
     }
-    return this.texturePromise;
+    return this.assetPromise;
   };
 
   Screensaver.prototype.start = function (settings) {
@@ -184,6 +233,7 @@
 
       self.maze = global.Win95Maze.generateMaze(self.settings.mazeSize);
       self.walker = new global.Win95Maze.Walker(self.maze, speed);
+      self.rats = self._placeRats();
       self.time = 0;
       self.running = true;
 
@@ -201,6 +251,7 @@
     }
     this.walker = null;
     this.maze = null;
+    this.rats = [];
   };
 
   Screensaver.prototype.resize = function (force) {
@@ -246,6 +297,7 @@
     this.canvas.height = height;
     this.imageData = this.context.createImageData(width, height);
     this.framebuffer = new Uint32Array(this.imageData.data.buffer);
+    this.zBuffer = new Float32Array(width);
   };
 
   Screensaver.prototype._frame = function (now) {
@@ -263,6 +315,106 @@
     this.context.putImageData(this.imageData, 0, 0);
 
     this.raf = global.requestAnimationFrame(this._frame);
+  };
+
+  Screensaver.prototype._placeRats = function () {
+    var maze = this.maze;
+    var walker = this.walker;
+    if (!maze || !walker || !maze.deadEnds || !maze.deadEnds.length) return [];
+
+    var deadEnds = [];
+    for (var i = 0; i < maze.deadEnds.length; i++) {
+      var cell = maze.deadEnds[i];
+      if (cell.x === maze.start.x && cell.y === maze.start.y) continue;
+      deadEnds.push(cell);
+    }
+    if (!deadEnds.length) return [];
+
+    var byKey = {};
+    for (var d = 0; d < deadEnds.length; d++) {
+      byKey[deadEnds[d].x + ',' + deadEnds[d].y] = deadEnds[d];
+    }
+
+    // Dead ends the camera will actually walk into, in the order it reaches
+    // them. The first one gets a guaranteed rat.
+    var pathCells = walker.path.cells;
+    var pathKeys = {};
+    var visitIndex = {};
+    for (var p = 0; p < pathCells.length; p++) {
+      var pathKey = pathCells[p].x + ',' + pathCells[p].y;
+      pathKeys[pathKey] = true;
+      if (byKey[pathKey] && visitIndex[pathKey] === undefined) {
+        visitIndex[pathKey] = p;
+      }
+    }
+
+    var visited = [];
+    var adjacent = [];
+    for (var e = 0; e < deadEnds.length; e++) {
+      var deadEnd = deadEnds[e];
+      var deadEndKey = deadEnd.x + ',' + deadEnd.y;
+      if (visitIndex[deadEndKey] !== undefined) {
+        visited.push({ cell: deadEnd, index: visitIndex[deadEndKey] });
+      } else if (pathKeys[deadEnd.open.x + ',' + deadEnd.open.y]) {
+        adjacent.push(deadEnd);
+      }
+    }
+
+    visited.sort(function (a, b) {
+      return a.index - b.index;
+    });
+
+    var wanted = maze.size <= 11 ? 2 : maze.size <= 15 ? 3 : 4;
+    var chosen = [];
+    var chosenKeys = {};
+
+    function add(cell) {
+      var key = cell.x + ',' + cell.y;
+      if (chosenKeys[key] || chosen.length >= wanted) return;
+      chosenKeys[key] = true;
+      chosen.push(cell);
+    }
+
+    // One rat is always on the walked route.
+    if (visited.length) add(visited[0].cell);
+    else if (adjacent.length) add(adjacent[(Math.random() * adjacent.length) | 0]);
+
+    function shuffle(list) {
+      for (var s = list.length - 1; s > 0; s--) {
+        var t = (Math.random() * (s + 1)) | 0;
+        var tmp = list[s];
+        list[s] = list[t];
+        list[t] = tmp;
+      }
+      return list;
+    }
+
+    // Fill the remaining dead ends, favouring ones that open onto the route.
+    var pool = shuffle(adjacent.slice()).concat(shuffle(deadEnds.slice()));
+    for (var q = 0; q < pool.length && chosen.length < wanted; q++) {
+      add(pool[q]);
+    }
+
+    var rats = [];
+    for (var r = 0; r < chosen.length; r++) {
+      var spot = chosen[r];
+      var centreX = (spot.x + 0.5) * CELL_SIZE;
+      var centreY = (spot.y + 0.5) * CELL_SIZE;
+      var openX = (spot.open.x + 0.5) * CELL_SIZE;
+      var openY = (spot.open.y + 0.5) * CELL_SIZE;
+      var awayX = centreX - openX;
+      var awayY = centreY - openY;
+      var awayLength = Math.sqrt(awayX * awayX + awayY * awayY) || 1;
+
+      rats.push({
+        x: centreX + (awayX / awayLength) * 0.75,
+        y: centreY + (awayY / awayLength) * 0.75,
+        scale: 0.88 + Math.random() * 0.24,
+        phase: Math.random() * Math.PI * 2
+      });
+    }
+
+    return rats;
   };
 
   Screensaver.prototype._drawFloor = function (dirX, dirY, planeX, planeY, horizon, texture) {
@@ -444,6 +596,8 @@
       if (perpendicular < 0.03) perpendicular = 0.03;
       if (perpendicular > FOG_DISTANCE) continue;
 
+      this.zBuffer[x] = perpendicular;
+
       var texture = textures.brick;
       if (theme === 'cobble') {
         texture = textures.cobble;
@@ -490,6 +644,92 @@
     }
   };
 
+  Screensaver.prototype._drawRats = function (dirX, dirY, planeX, planeY, horizon) {
+    var width = this.width;
+    var height = this.height;
+    var framebuffer = this.framebuffer;
+    var sheet = this.ratSheet;
+    var rats = this.rats;
+
+    if (!sheet || !rats.length) return;
+
+    var px = this.walker.x * CELL_SIZE;
+    var py = this.walker.y * CELL_SIZE;
+    var invDet = 1 / (planeX * dirY - dirX * planeY);
+    var visible = [];
+
+    for (var i = 0; i < rats.length; i++) {
+      var rat = rats[i];
+      var relX = rat.x - px;
+      var relY = rat.y - py;
+      var transformX = invDet * (dirY * relX - dirX * relY);
+      var transformY = invDet * (-planeY * relX + planeX * relY);
+
+      if (transformY > 0.2) {
+        visible.push({ rat: rat, tx: transformX, ty: transformY });
+      }
+    }
+
+    if (!visible.length) return;
+
+    // Paint far sprites first so nearer rats overlap them.
+    visible.sort(function (a, b) {
+      return b.ty - a.ty;
+    });
+
+    var data = sheet.data;
+    var sheetWidth = sheet.sheetWidth;
+
+    for (var s = 0; s < visible.length; s++) {
+      var sprite = visible[s];
+      var ty = sprite.ty;
+      if (ty > FOG_DISTANCE) continue;
+
+      var screenX = (width * 0.5) * (1 + sprite.tx / ty);
+      var spriteHeight = (RAT_WORLD_HEIGHT * sprite.rat.scale * height) / ty;
+      var spriteWidth = spriteHeight * (RAT_FRAME_WIDTH / RAT_FRAME_HEIGHT);
+      var bottom = horizon + (WALL_HEIGHT * 0.5 * height) / ty;
+      var top = bottom - spriteHeight;
+      var left = screenX - spriteWidth * 0.5;
+
+      var xStart = Math.max(0, Math.floor(left));
+      var xEnd = Math.min(width, Math.ceil(left + spriteWidth));
+      var yStart = Math.max(0, Math.floor(top));
+      var yEnd = Math.min(height, Math.ceil(bottom));
+      if (xEnd <= xStart || yEnd <= yStart) continue;
+
+      // Tail flick at about 2.5 fps, with the occasional blink.
+      var blink = ((this.time + sprite.rat.phase * 2.3) % 6.5) > 6.25;
+      var frame = blink ? 2 : Math.floor((this.time + sprite.rat.phase) * 2.6) % 2;
+      if (frame >= sheet.frames) frame = 0;
+      var frameOffset = frame * RAT_FRAME_WIDTH;
+
+      var fog = 1 - ty / FOG_DISTANCE;
+      var factor = ((0.12 + 0.88 * fog * fog) * 255) | 0;
+
+      for (var x = xStart; x < xEnd; x++) {
+        if (ty >= this.zBuffer[x]) continue;
+
+        var texX = Math.floor((x - left) * RAT_FRAME_WIDTH / spriteWidth);
+        if (texX < 0 || texX >= RAT_FRAME_WIDTH) continue;
+
+        for (var y = yStart; y < yEnd; y++) {
+          var texY = Math.floor((y - top) * RAT_FRAME_HEIGHT / spriteHeight);
+          if (texY < 0 || texY >= RAT_FRAME_HEIGHT) continue;
+
+          var source = (texY * sheetWidth + frameOffset + texX) * 4;
+          if (data[source + 3] < 128) continue;
+
+          var r = (data[source] * factor) >> 8;
+          var g = (data[source + 1] * factor) >> 8;
+          var b = (data[source + 2] * factor) >> 8;
+
+          framebuffer[y * width + x] = 0xff000000 | (b << 16) | (g << 8) | r;
+        }
+      }
+    }
+  };
+
   Screensaver.prototype.render = function () {
     var width = this.width;
     var height = this.height;
@@ -497,6 +737,7 @@
     var walker = this.walker;
 
     framebuffer.fill(0xff000000);
+    this.zBuffer.fill(Infinity);
 
     var dirX = Math.cos(walker.angle);
     var dirY = Math.sin(walker.angle);
@@ -512,6 +753,7 @@
     this._drawCeiling(dirX, dirY, planeX, planeY, horizon, this.textures.stone);
     this._drawFloor(dirX, dirY, planeX, planeY, horizon, this.textures.stone);
     this._drawWalls(dirX, dirY, planeX, planeY, horizon);
+    this._drawRats(dirX, dirY, planeX, planeY, horizon);
   };
 
   global.Win95MazeScreensaver = Screensaver;

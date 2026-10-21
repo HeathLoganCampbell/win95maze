@@ -69,7 +69,24 @@
       }
     }
 
-    return { grid: grid, size: size, start: start };
+    // Dead ends are where the rats live.
+    var deadEnds = [];
+    for (var ey = 1; ey < size - 1; ey++) {
+      for (var ex = 1; ex < size - 1; ex++) {
+        if (grid[ey * size + ex] !== 0) continue;
+        var exits = openNeighbours({ grid: grid, size: size }, { x: ex, y: ey });
+        if (exits.length === 1) {
+          deadEnds.push({ x: ex, y: ey, open: exits[0] });
+        }
+      }
+    }
+
+    return {
+      grid: grid,
+      size: size,
+      start: start,
+      deadEnds: deadEnds
+    };
   }
 
   function openNeighbours(maze, cell) {

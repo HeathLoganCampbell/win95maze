@@ -1,17 +1,20 @@
 # 3D Maze — Windows 95 screen saver, remade for the web
 
 A browser remake of the Windows 95 **3D Maze** screen saver: a dark brick maze
-that wanders around by itself, rendered with a hand-written raycasting engine
-and textured with blocks from
+that wanders around by itself, with a few rats loitering in the dead ends. It is
+rendered with a hand-written raycasting engine and textured with blocks from
 [ClassicCraft](https://github.com/HeathLoganCampbell/classiccraft).
 
 **Play it:** <https://heathlogancampbell.github.io/win95maze/>
 
-![The 3D Maze screen saver running in the browser](docs/screenshot.png)
+![The 3D Maze screen saver with a rat in a dead end](docs/screenshot.png)
 
 ## What you get
 
 - A procedural brick maze, re-dug every time the screen saver starts.
+- Rats in random dead ends; one is always placed in a dead end on or beside the
+  camera's route, so you should run into one before long. They flick their
+  tails and blink.
 - A camera that walks the corridors on its own, slowing into the turns.
 - Textured walls, floor, and ceiling, plus distance fog and per-face shading.
 - A small Windows 95 desktop around it: icons, Start menu, taskbar clock,
@@ -58,9 +61,10 @@ upscaled, which keeps the chunky 1995 look and makes every pixel cheaper.
 | File | Job |
 | --- | --- |
 | `js/maze.js` | Recursive-backtracker maze, extra loop carving, weighted random walk, rounded polyline path, and the camera walker. |
-| `js/screensaver.js` | Canvas raycaster: DDA wall casting, textured floor/ceiling projection, distance fog, face shading, and block-atlas sampling. |
-| `js/app.js` | Windows 95 desktop shell, window dragging, settings persistence, full-screen transitions, and screen-saver wake behaviour. |
+| `js/screensaver.js` | Canvas raycaster: DDA wall casting, textured floor/ceiling projection, distance fog, face shading, block-atlas sampling, and billboarded rat sprites. |
+| `js/app.js` | Windows 95 desktop shell, window dragging, settings persistence, and screen-saver wake behaviour. |
 | `assets/blocks.png` | The 16 × 768 ClassicCraft block atlas, copied byte-for-byte. |
+| `assets/rat.png` | A 120 × 22 sprite sheet with three 40 × 22 rat frames: tail down, tail up, and a blink. |
 
 The maze is a standard odd-cell grid: carve with a recursive backtracker, then
 knock out a few walls so the walker can loop instead of hitting dead ends. A
@@ -73,6 +77,11 @@ the 16 × 16 side face of the block texture, and applies a side-dependent shade
 and fog. Floor and ceiling are drawn by row-wise plane casting, before the
 walls are painted over them. The camera bobs on a sine wave driven by distance
 travelled, not time, so it stays in step even when the tab is throttled.
+
+Rats are billboarded sprites. Each one is placed in a dead end (one dead end is
+always on the walker's path), transformed into camera space, projected onto the
+screen, and clipped column-by-column against the wall depth buffer. The sprite
+sheet animates a tail flick and the occasional blink.
 
 The block atlas stores three faces per block; the renderer uses the side face
 (rows 16–31 of each 48-row slot). Textures repeat twice per world unit so the
@@ -104,7 +113,8 @@ Code is MIT licensed — see [LICENSE](LICENSE).
 The block textures in `assets/blocks.png` come from
 [ClassicCraft](https://github.com/HeathLoganCampbell/classiccraft) by
 Heath Logan Campbell, also MIT licensed. The art is used here as-is; the maze,
-renderer, and Windows 95 shell are new.
+renderer, and Windows 95 shell are new. The rat sprite in `assets/rat.png` is
+original pixel art for this project.
 
 Windows 95 is a trademark of Microsoft. This is an unofficial fan recreation,
 not affiliated with or endorsed by Microsoft.
