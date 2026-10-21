@@ -90,8 +90,8 @@ the README:
 | | |
 | --- | --- |
 | **Model** | DeepSeek V4.1 Flash 1017 (`deepseek/deepseek-flash`), via OpenCode |
-| **Build cost** | ≈ **US$0.12** of model usage for the initial build |
-| **Token usage** | ≈ 70k input, 47k output, 10.7M cached-input tokens (at $0.15/M input, $0.60/M output, $0.003/M cached read) |
+| **Build cost** | ≈ **US$0.15** of model usage for the initial build and the follow-up fixes |
+| **Token usage** | ≈ 82k input, 59k output, 17M cached-input tokens (at $0.15/M input, $0.60/M output, $0.003/M cached read) |
 | **Hosting** | **US$0.00** on GitHub Pages |
 
 The figure is tracked by the harness for the build session; it is a rounded
