@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" shape-rendering="crispEdges">
+  <rect width="32" height="32" fill="#000000"/>
+  <rect x="10" y="9" width="12" height="14" fill="#8f2c1e"/>
+  <path d="M10 12h12M10 16h12M10 20h12M13 9v3M18 9v3M11 12v4M16 12v4M21 12v4M13 16v4M18 16v4M11 20v3M16 20v3M21 20v3"
+        stroke="#cbb9a6" stroke-width="1" fill="none"/>
+  <polygon points="0,0 10,9 10,23 0,32" fill="#7c2519"/>
+  <polygon points="32,0 22,9 22,23 32,32" fill="#5e1a11"/>
+  <path d="M0 5l10 4M0 12l10 4M0 19l10 4M0 26l10 4" stroke="#d2c1ae" stroke-width="1"/>
+  <path d="M32 5l-10 4M32 12l-10 4M32 19l-10 4M32 26l-10 4" stroke="#a38e7a" stroke-width="1"/>
+  <polygon points="10,23 22,23 32,32 0,32" fill="#707070"/>
+  <path d="M10 23h12M8 26h16M5 29h22" stroke="#8e8e8e" stroke-width="1"/>
+  <path d="M16 23v9M12 23l-4 9M20 23l4 9" stroke="#565656" stroke-width="1"/>
+</svg>

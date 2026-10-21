@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>3D Maze &mdash; Windows 95 Screen Saver</title>
+<meta name="description" content="A browser remake of the Windows 95 3D Maze screen saver, built with ClassicCraft brick block textures.">
+<meta name="theme-color" content="#008080">
+<meta property="og:type" content="website">
+<meta property="og:title" content="3D Maze — Windows 95 Screen Saver">
+<meta property="og:description" content="A brick maze that walks itself. Windows 95 3D Maze recreated in the browser with ClassicCraft textures.">
+<meta property="og:url" content="https://heathlogancampbell.github.io/win95maze/">
+<meta property="og:image" content="https://heathlogancampbell.github.io/win95maze/docs/screenshot.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<noscript>
+  <div class="noscript">This maze needs JavaScript. Enable it and reload — the bricks will be waiting.</div>
+</noscript>
+
+<div id="desktop" aria-label="Windows 95 desktop">
+  <div class="desktop-icons">
+    <button class="desktop-icon" id="mazeIcon" type="button" aria-label="3D Maze screen saver. Double-click to start.">
+      <img src="assets/icon.svg" width="32" height="32" alt="" draggable="false">
+      <span class="icon-label">3D Maze</span>
+    </button>
+    <button class="desktop-icon" id="readmeIcon" type="button" aria-label="Read Me. Double-click to open.">
+      <img src="assets/readme.svg" width="32" height="32" alt="" draggable="false">
+      <span class="icon-label">Read Me</span>
+    </button>
+  </div>
+
+  <div class="start-hint" id="startHint" role="note">
+    Double-click <b>3D Maze</b> to run the screen saver.<br>
+    Move the mouse or press any key to exit.
+  </div>
+
+  <!-- Properties window -->
+  <div class="window" id="settingsWindow" role="dialog" aria-labelledby="settingsTitle" hidden>
+    <div class="titlebar" data-drag>
+      <img class="titlebar-icon" src="assets/icon.svg" width="16" height="16" alt="">
+      <span class="titlebar-text" id="settingsTitle">3D Maze Properties</span>
+      <button class="titlebar-button" id="settingsClose" type="button" aria-label="Close">&#10005;</button>
+    </div>
+    <div class="window-body">
+      <div class="tabs" role="tablist" aria-label="Properties sections">
+        <button class="tab is-active" id="tabScreen" type="button" role="tab" aria-selected="true" aria-controls="panelScreen" data-tab="screen">Screen</button>
+        <button class="tab" id="tabMaze" type="button" role="tab" aria-selected="false" aria-controls="panelMaze" data-tab="maze">Maze</button>
+      </div>
+
+      <div class="tab-panel" id="panelScreen" data-panel="screen" role="tabpanel" aria-labelledby="tabScreen">
+        <fieldset class="group">
+          <legend>Appearance</legend>
+          <div class="field-row">
+            <label for="wallTheme">Wall blocks:</label>
+            <select id="wallTheme">
+              <option value="brick">Brick</option>
+              <option value="cobble">Cobblestone</option>
+              <option value="mixed">Mixed brick &amp; cobble</option>
+            </select>
+          </div>
+          <div class="field-row">
+            <label for="quality">Render quality:</label>
+            <select id="quality">
+              <option value="chunky">Chunky (pixelated)</option>
+              <option value="normal">Normal</option>
+              <option value="sharp">Sharp</option>
+            </select>
+          </div>
+          <label class="check-row"><input type="checkbox" id="bob"> Camera bobbing</label>
+          <label class="check-row"><input type="checkbox" id="showHint"> Show &ldquo;how to exit&rdquo; hint</label>
+        </fieldset>
+        <p class="note">Wall textures are cut straight from the ClassicCraft block atlas.</p>
+      </div>
+
+      <div class="tab-panel" id="panelMaze" data-panel="maze" role="tabpanel" aria-labelledby="tabMaze" hidden>
+        <fieldset class="group">
+          <legend>Maze</legend>
+          <div class="field-row">
+            <label for="mazeSize">Maze size:</label>
+            <select id="mazeSize">
+              <option value="11">Small (11 &times; 11)</option>
+              <option value="15">Medium (15 &times; 15)</option>
+              <option value="21">Large (21 &times; 21)</option>
+            </select>
+          </div>
+          <div class="field-row">
+            <label for="speed">Walking speed:</label>
+            <select id="speed">
+              <option value="slow">Slow</option>
+              <option value="normal">Normal</option>
+              <option value="fast">Fast</option>
+            </select>
+          </div>
+          <p class="note">A new maze is dug every time the screen saver starts.</p>
+        </fieldset>
+      </div>
+
+      <div class="dialog-buttons">
+        <button class="btn btn-default" id="settingsOk" type="button">OK</button>
+        <button class="btn" id="settingsCancel" type="button">Cancel</button>
+        <button class="btn" id="settingsPreview" type="button">Preview</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- About window -->
+  <div class="window" id="aboutWindow" role="dialog" aria-labelledby="aboutTitle" hidden>
+    <div class="titlebar" data-drag>
+      <img class="titlebar-icon" src="assets/icon.svg" width="16" height="16" alt="">
+      <span class="titlebar-text" id="aboutTitle">About 3D Maze</span>
+      <button class="titlebar-button" id="aboutClose" type="button" aria-label="Close">&#10005;</button>
+    </div>
+    <div class="window-body about-body">
+      <div class="about-head">
+        <img src="assets/icon.svg" width="48" height="48" alt="">
+        <div>
+          <h1>3D Maze</h1>
+          <p class="about-sub">Windows 95 Screen Saver &mdash; web remake</p>
+        </div>
+      </div>
+      <p>A little brick corridor that wanders off on its own. It is a raycast maze, a
+         handful of ClassicCraft block textures, and absolutely no reason to exist.</p>
+      <ul class="about-list">
+        <li><b>Double-click 3D Maze</b> to start.</li>
+        <li>Move the mouse, click, or press any key to exit.</li>
+        <li>Right here in the Start menu: settings, preview, shut down.</li>
+      </ul>
+      <p class="about-credit">Block textures from
+        <a href="https://github.com/HeathLoganCampbell/classiccraft" target="_blank" rel="noopener">ClassicCraft</a>
+        by Heath Logan Campbell (MIT licence).</p>
+      <div class="dialog-buttons">
+        <button class="btn btn-default" id="aboutOk" type="button">OK</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Start menu -->
+<div class="start-menu" id="startMenu" role="menu" aria-label="Start menu" hidden>
+  <div class="start-menu-rail"><span>Windows 95</span></div>
+  <div class="start-menu-items">
+    <button class="start-item" id="menuMaze" type="button" role="menuitem">
+      <img src="assets/icon.svg" width="24" height="24" alt=""><span>3D Maze</span>
+    </button>
+    <div class="menu-separator" role="separator"></div>
+    <button class="start-item" id="menuSettings" type="button" role="menuitem">
+      <img src="assets/settings.svg" width="24" height="24" alt=""><span>Settings&hellip;</span>
+    </button>
+    <button class="start-item" id="menuAbout" type="button" role="menuitem">
+      <img src="assets/info.svg" width="24" height="24" alt=""><span>About 3D Maze</span>
+    </button>
+    <div class="menu-separator" role="separator"></div>
+    <button class="start-item" id="menuShutdown" type="button" role="menuitem">
+      <img src="assets/shutdown.svg" width="24" height="24" alt=""><span>Shut Down&hellip;</span>
+    </button>
+  </div>
+</div>
+
+<!-- Taskbar -->
+<div class="taskbar" id="taskbar">
+  <button class="start-button" id="startButton" type="button" aria-haspopup="true" aria-expanded="false">
+    <svg class="win-flag" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+      <path d="M1 3.4 7.1 1.7v5.5L1 8.8Z" fill="#ff3b30"/>
+      <path d="M8 1.4 15 0v6.8l-7 .8Z" fill="#3ddc5a"/>
+      <path d="M1 9.6l6.1-1.2v5.4L1 15Z" fill="#2f7bff"/>
+      <path d="M8 8.2l7-.8V15l-7-1.2Z" fill="#ffd60a"/>
+    </svg>
+    <span>Start</span>
+  </button>
+  <div class="taskbar-divider" aria-hidden="true"></div>
+  <div class="taskbar-spacer"></div>
+  <div class="clock" id="clock" aria-label="Clock">12:00 PM</div>
+</div>
+
+<!-- Screen saver overlay -->
+<div id="screensaver" role="dialog" aria-label="3D Maze screen saver" aria-hidden="true" hidden>
+  <canvas id="mazeCanvas"></canvas>
+  <div class="ss-hint" id="ssHint">Move the mouse or press any key to exit</div>
+</div>
+
+<!-- Shut down screen -->
+<div id="shutdownScreen" class="shutdown-screen" tabindex="-1" hidden>
+  <p class="shutdown-message">It&rsquo;s now safe to turn off<br>your computer.</p>
+  <p class="shutdown-hint">Click anywhere or press any key to restart</p>
+</div>
+
+<script src="js/maze.js"></script>
+<script src="js/screensaver.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
