@@ -56,10 +56,8 @@
   var screensaver = new window.Win95MazeScreensaver(screensaverCanvas);
   var screensaverActive = false;
   var screensaverStartedAt = 0;
-  var fullscreenEnteredAt = 0;
   var hintTimer = 0;
   var zCounter = 60;
-  var lastPointer = { x: 0, y: 0 };
   var coarsePointer = window.matchMedia('(pointer: coarse)').matches;
 
   /* ------------------------------------------------------------- settings */
@@ -391,24 +389,22 @@
 
     screensaverActive = true;
     screensaverStartedAt = performance.now();
-    fullscreenEnteredAt = 0;
-    lastPointer.startX = lastPointer.x;
-    lastPointer.startY = lastPointer.y;
 
     screensaverOverlay.hidden = false;
     screensaverOverlay.setAttribute('aria-hidden', 'false');
     screensaverOverlay.focus({ preventScroll: true });
 
     ssHint.textContent = coarsePointer
-      ? 'Tap to exit the screen saver'
-      : 'Move the mouse or press any key to exit';
+      ? 'Tap anywhere to exit'
+      : 'Click anywhere or press Esc to exit';
 
     window.clearTimeout(hintTimer);
+    ssHint.classList.remove('is-gone');
     if (settings.showHint) {
-      ssHint.classList.remove('is-gone');
+      ssHint.classList.remove('is-dim');
       hintTimer = window.setTimeout(function () {
-        ssHint.classList.add('is-gone');
-      }, 5000);
+        ssHint.classList.add('is-dim');
+      }, 6000);
     } else {
       ssHint.classList.add('is-gone');
     }
@@ -420,14 +416,6 @@
         'Serve this folder over HTTP (for example <b>python3 -m http.server</b>) and reload.';
       window.console.error(error);
     });
-
-    // A full screen saver is the point; failures (iframes, iOS) are harmless.
-    if (screensaverOverlay.requestFullscreen) {
-      var request = screensaverOverlay.requestFullscreen({ navigationUI: 'hide' });
-      if (request && typeof request.catch === 'function') {
-        request.catch(function () { /* stay in the tab */ });
-      }
-    }
   }
 
   function stopScreenSaver() {
@@ -438,60 +426,42 @@
     screensaverOverlay.hidden = true;
     screensaverOverlay.setAttribute('aria-hidden', 'true');
     ssHint.classList.add('is-gone');
+    ssHint.classList.remove('is-dim');
     window.clearTimeout(hintTimer);
-
-    if (document.fullscreenElement) {
-      var exit = document.exitFullscreen();
-      if (exit && typeof exit.catch === 'function') {
-        exit.catch(function () { /* ignore */ });
-      }
-    }
 
     mazeIcon.focus({ preventScroll: true });
   }
 
-  document.addEventListener('fullscreenchange', function () {
-    if (!screensaverActive) return;
-
-    if (document.fullscreenElement) {
-      fullscreenEnteredAt = performance.now();
-      return;
-    }
-
-    // Esc in full screen leaves full screen; treat that as "wake up".
-    if (fullscreenEnteredAt && performance.now() - fullscreenEnteredAt > 250) {
-      stopScreenSaver();
-    }
+  $('ssExit').addEventListener('click', function () {
+    stopScreenSaver();
   });
 
-  window.addEventListener('pointermove', function (event) {
-    lastPointer.x = event.clientX;
-    lastPointer.y = event.clientY;
+  // If the renderer throws while running, say so instead of leaving a frozen
+  // picture behind. The message is shown in the screen saver hint.
+  window.addEventListener('error', function (event) {
+    if (!screensaverActive) return;
+    ssHint.textContent = 'Screen saver error: ' + (event.message || 'unknown') + ' — click to exit';
+    ssHint.classList.remove('is-gone', 'is-dim');
+    window.console.error(event.error || event.message);
+  });
 
-    if (!screensaverActive) {
-      lastPointer.startX = event.clientX;
-      lastPointer.startY = event.clientY;
-      return;
-    }
-    if (performance.now() - screensaverStartedAt < 550) return;
+  window.addEventListener('unhandledrejection', function (event) {
+    if (!screensaverActive) return;
+    var reason = event.reason && event.reason.message ? event.reason.message : String(event.reason);
+    ssHint.textContent = 'Screen saver error: ' + reason + ' — click to exit';
+    ssHint.classList.remove('is-gone', 'is-dim');
+    window.console.error(event.reason);
+  });
 
-    var dx = event.clientX - lastPointer.startX;
-    var dy = event.clientY - lastPointer.startY;
-    if (Math.hypot(dx, dy) > 12) stopScreenSaver();
-  }, { passive: true });
-
+  // The Exit button gets to run its own click handler; everything else wakes
+  // the screen saver immediately.
   window.addEventListener('pointerdown', function (event) {
     if (!screensaverActive) return;
     if (performance.now() - screensaverStartedAt < 450) return;
+    if (event.target.closest && event.target.closest('#ssExit')) return;
     event.preventDefault();
     stopScreenSaver();
   }, true);
-
-  window.addEventListener('wheel', function () {
-    if (!screensaverActive) return;
-    if (performance.now() - screensaverStartedAt < 450) return;
-    stopScreenSaver();
-  }, { passive: true });
 
   window.addEventListener('keydown', function (event) {
     if (!screensaverActive) return;
@@ -546,8 +516,5 @@
     }
   });
 
-  // Make the initial mouse position a sensible wake-up origin.
-  lastPointer.startX = window.innerWidth / 2;
-  lastPointer.startY = window.innerHeight / 2;
   screensaverOverlay.setAttribute('tabindex', '-1');
 })();

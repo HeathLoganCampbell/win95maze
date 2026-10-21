@@ -35,7 +35,7 @@
 
   <div class="start-hint" id="startHint" role="note">
     Double-click <b>3D Maze</b> to run the screen saver.<br>
-    Move the mouse or press any key to exit.
+    Click the screen or press Esc to exit.
   </div>
 
   <!-- Properties window -->
@@ -126,8 +126,8 @@
          handful of ClassicCraft block textures, and absolutely no reason to exist.</p>
       <ul class="about-list">
         <li><b>Double-click 3D Maze</b> to start.</li>
-        <li>Move the mouse, click, or press any key to exit.</li>
-        <li>Right here in the Start menu: settings, preview, shut down.</li>
+        <li>Exit with the on-screen Exit button, a click, or Esc. It stays in the browser &mdash; no fullscreen.</li>
+        <li>Settings and Shut Down are in the Start menu.</li>
       </ul>
       <p class="about-credit">Block textures from
         <a href="https://github.com/HeathLoganCampbell/classiccraft" target="_blank" rel="noopener">ClassicCraft</a>
@@ -177,9 +177,10 @@
 </div>
 
 <!-- Screen saver overlay -->
-<div id="screensaver" role="dialog" aria-label="3D Maze screen saver" aria-hidden="true" hidden>
+<div id="screensaver" role="dialog" aria-label="3D Maze screen saver" aria-hidden="true" tabindex="-1" hidden>
   <canvas id="mazeCanvas"></canvas>
-  <div class="ss-hint" id="ssHint">Move the mouse or press any key to exit</div>
+  <button class="ss-exit" id="ssExit" type="button" title="Exit the screen saver">Exit</button>
+  <div class="ss-hint" id="ssHint">Click, press Esc, or move the mouse to exit</div>
 </div>
 
 <!-- Shut down screen -->

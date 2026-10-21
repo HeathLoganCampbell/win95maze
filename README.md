@@ -16,7 +16,10 @@ and textured with blocks from
 - Textured walls, floor, and ceiling, plus distance fog and per-face shading.
 - A small Windows 95 desktop around it: icons, Start menu, taskbar clock,
   draggable properties window, and a proper shut-down screen.
-- Full-screen screen saver that exits on mouse movement, a click, or any key.
+- A screen saver that runs inside the browser viewport — it never requests
+  browser fullscreen and never takes over the whole display.
+- Stays running until you explicitly exit with the visible **Exit** button, a
+  click, or Esc. Mouse movement does not close it.
 - Settings for wall blocks, puzzle size, walking speed, render quality, and
   camera bob, saved in `localStorage`.
 - No build step, no dependencies, no tracking. It is just static files.
@@ -25,7 +28,9 @@ and textured with blocks from
 
 Double-click the **3D Maze** icon, or choose **Start → 3D Maze**.
 
-- **Exit the screen saver:** move the mouse, click, tap, or press any key.
+- **Exit the screen saver:** click the **Exit** button, click anywhere, or
+  press Esc. There is no fullscreen takeover, and moving the mouse does not
+  stop it.
 - **Settings:** Start → Settings (or right here in the desktop shell).
 - **Read Me:** double-click the Read Me icon for the about box.
 - **Shut Down:** Start → Shut Down for the orange-text send-off.
