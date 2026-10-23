@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>3D Maze &mdash; Windows 95 Screen Saver</title>
-<meta name="description" content="A browser remake of the Windows 95 3D Maze screen saver, built with ClassicCraft brick block textures.">
+<title>3D Maze &amp; 3D Pinball &mdash; Windows 95 Desktop</title>
+<meta name="description" content="A Windows 95 desktop in the browser: the 3D Maze screen saver and a fully playable game of 3D Pinball.">
 <meta name="theme-color" content="#008080">
 <meta property="og:type" content="website">
-<meta property="og:title" content="3D Maze — Windows 95 Screen Saver">
-<meta property="og:description" content="A brick maze that walks itself. Windows 95 3D Maze recreated in the browser with ClassicCraft textures.">
+<meta property="og:title" content="3D Maze &amp; 3D Pinball — Windows 95 Desktop">
+<meta property="og:description" content="A brick maze that walks itself, and a space pinball table with physics, flippers, and high scores.">
 <meta property="og:url" content="https://heathlogancampbell.github.io/win95maze/">
 <meta property="og:image" content="https://heathlogancampbell.github.io/win95maze/docs/screenshot.png">
 <meta name="twitter:card" content="summary_large_image">
@@ -27,6 +27,10 @@
       <img src="assets/icon.svg" width="32" height="32" alt="" draggable="false">
       <span class="icon-label">3D Maze</span>
     </button>
+    <button class="desktop-icon" id="pinballIcon" type="button" aria-label="3D Pinball. Double-click to play.">
+      <img src="assets/pinball.svg" width="32" height="32" alt="" draggable="false">
+      <span class="icon-label">3D Pinball</span>
+    </button>
     <button class="desktop-icon" id="readmeIcon" type="button" aria-label="Read Me. Double-click to open.">
       <img src="assets/readme.svg" width="32" height="32" alt="" draggable="false">
       <span class="icon-label">Read Me</span>
@@ -34,7 +38,7 @@
   </div>
 
   <div class="start-hint" id="startHint" role="note">
-    Double-click <b>3D Maze</b> to run the screen saver.<br>
+    Double-click <b>3D Maze</b> for the screen saver, or <b>3D Pinball</b> to play.<br>
     Click the screen or press Esc to exit.
   </div>
 
@@ -107,6 +111,35 @@
     </div>
   </div>
 
+  <!-- 3D Pinball -->
+  <div class="window pinball-window" id="pinballWindow" role="dialog" aria-labelledby="pinballTitle" hidden>
+    <div class="titlebar" data-drag>
+      <img class="titlebar-icon" src="assets/pinball.svg" width="16" height="16" alt="">
+      <span class="titlebar-text" id="pinballTitle">3D Pinball &mdash; Deep Space</span>
+      <button class="titlebar-button" id="pinballMinimize" type="button" aria-label="Minimize">_</button>
+      <button class="titlebar-button" id="pinballClose" type="button" aria-label="Close">&#10005;</button>
+    </div>
+    <div class="window-body pinball-body">
+      <div class="pinball-hud" aria-label="Pinball scoreboard">
+        <div class="pb-stat"><span>Score</span><b id="pbScore">0</b></div>
+        <div class="pb-stat"><span>Balls</span><b id="pbBall">3</b></div>
+        <div class="pb-stat"><span>Multiplier</span><b id="pbMult">x1</b></div>
+        <div class="pb-stat"><span>High</span><b id="pbHigh">0</b></div>
+      </div>
+      <div class="pinball-stage">
+        <canvas id="pinballCanvas" width="400" height="640" tabindex="0"
+                aria-label="Pinball table. Left and right arrow keys control the flippers; hold Space to charge the plunger."></canvas>
+      </div>
+      <div class="pinball-bar">
+        <span class="pb-tip" id="pbTip">Hold SPACE or Launch to charge</span>
+        <button class="btn pb-button" id="pbLaunch" type="button">Launch</button>
+        <button class="btn pb-button" id="pbNew" type="button">New</button>
+        <button class="btn pb-button" id="pbPause" type="button">Pause</button>
+        <button class="btn pb-button" id="pbSound" type="button">Sound: On</button>
+      </div>
+    </div>
+  </div>
+
   <!-- About window -->
   <div class="window" id="aboutWindow" role="dialog" aria-labelledby="aboutTitle" hidden>
     <div class="titlebar" data-drag>
@@ -147,6 +180,9 @@
     <button class="start-item" id="menuMaze" type="button" role="menuitem">
       <img src="assets/icon.svg" width="24" height="24" alt=""><span>3D Maze</span>
     </button>
+    <button class="start-item" id="menuPinball" type="button" role="menuitem">
+      <img src="assets/pinball.svg" width="24" height="24" alt=""><span>3D Pinball</span>
+    </button>
     <div class="menu-separator" role="separator"></div>
     <button class="start-item" id="menuSettings" type="button" role="menuitem">
       <img src="assets/settings.svg" width="24" height="24" alt=""><span>Settings&hellip;</span>
@@ -173,6 +209,12 @@
     <span>Start</span>
   </button>
   <div class="taskbar-divider" aria-hidden="true"></div>
+  <div class="taskbar-tasks" id="taskbarTasks">
+    <button class="task-button" id="pinballTask" type="button" aria-pressed="false" hidden>
+      <img src="assets/pinball.svg" width="16" height="16" alt="">
+      <span>3D Pinball</span>
+    </button>
+  </div>
   <div class="taskbar-spacer"></div>
   <div class="clock" id="clock" aria-label="Clock">12:00 PM</div>
 </div>
@@ -192,6 +234,7 @@
 
 <script src="js/maze.js"></script>
 <script src="js/screensaver.js"></script>
+<script src="js/pinball.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

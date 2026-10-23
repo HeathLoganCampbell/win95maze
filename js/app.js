@@ -30,6 +30,7 @@
 
   var desktop = $('desktop');
   var mazeIcon = $('mazeIcon');
+  var pinballIcon = $('pinballIcon');
   var readmeIcon = $('readmeIcon');
   var startHint = $('startHint');
   var startButton = $('startButton');
@@ -42,6 +43,8 @@
 
   var settingsWindow = $('settingsWindow');
   var aboutWindow = $('aboutWindow');
+  var pinballWindow = $('pinballWindow');
+  var pinballTask = $('pinballTask');
 
   var fields = {
     wallTheme: $('wallTheme'),
@@ -54,6 +57,7 @@
 
   var settings = loadSettings();
   var screensaver = new window.Win95MazeScreensaver(screensaverCanvas);
+  var pinball = new window.Win95Pinball($('pinballCanvas'));
   var screensaverActive = false;
   var screensaverStartedAt = 0;
   var hintTimer = 0;
@@ -133,7 +137,7 @@
   function centreIfNeeded(win) {
     if (!win.style.left) {
       win.style.left = '50%';
-      win.style.top = '45%';
+      win.style.top = win === pinballWindow ? 'calc(50% - 15px)' : '45%';
       win.style.transform = 'translate(-50%, -50%)';
     }
   }
@@ -206,9 +210,10 @@
 
   makeDraggable(settingsWindow);
   makeDraggable(aboutWindow);
+  makeDraggable(pinballWindow);
 
   // Clicking a window raises it.
-  [settingsWindow, aboutWindow].forEach(function (win) {
+  [settingsWindow, aboutWindow, pinballWindow].forEach(function (win) {
     win.addEventListener('pointerdown', function () {
       bringToFront(win);
     });
@@ -275,6 +280,50 @@
   $('aboutClose').addEventListener('click', closeAbout);
   $('aboutOk').addEventListener('click', closeAbout);
 
+  /* ---------------------------------------------------------------- pinball */
+
+  function setPinballTask(active) {
+    pinballTask.hidden = false;
+    pinballTask.classList.toggle('is-active', active);
+    pinballTask.setAttribute('aria-pressed', active ? 'true' : 'false');
+  }
+
+  function openPinball() {
+    closeStartMenu();
+    hideStartHint();
+    centreIfNeeded(pinballWindow);
+    pinballWindow.hidden = false;
+    setPinballTask(true);
+    bringToFront(pinballWindow);
+    pinball.resume();
+    $('pinballCanvas').focus({ preventScroll: true });
+  }
+
+  function minimizePinball() {
+    if (pinballWindow.hidden) return;
+    pinball.pause();
+    pinballWindow.hidden = true;
+    pinballTask.classList.remove('is-active');
+    pinballTask.setAttribute('aria-pressed', 'false');
+    pinballTask.focus({ preventScroll: true });
+  }
+
+  function closePinball() {
+    pinball.stop();
+    pinballWindow.hidden = true;
+    pinballTask.hidden = true;
+    pinballTask.classList.remove('is-active');
+    pinballTask.setAttribute('aria-pressed', 'false');
+    pinballIcon.focus({ preventScroll: true });
+  }
+
+  $('pinballClose').addEventListener('click', closePinball);
+  $('pinballMinimize').addEventListener('click', minimizePinball);
+  pinballTask.addEventListener('click', function () {
+    if (pinballWindow.hidden) openPinball();
+    else minimizePinball();
+  });
+
   /* ------------------------------------------------------------- start menu */
 
   function openStartMenu() {
@@ -311,6 +360,11 @@
     startScreenSaver();
   });
 
+  $('menuPinball').addEventListener('click', function () {
+    closeStartMenu();
+    openPinball();
+  });
+
   $('menuSettings').addEventListener('click', function () {
     closeStartMenu();
     openSettings();
@@ -342,6 +396,15 @@
 
   mazeIcon.addEventListener('dblclick', function () {
     startScreenSaver();
+  });
+
+  pinballIcon.addEventListener('click', function () {
+    selectIcon(pinballIcon);
+    if (coarsePointer) openPinball();
+  });
+
+  pinballIcon.addEventListener('dblclick', function () {
+    openPinball();
   });
 
   readmeIcon.addEventListener('click', function () {
@@ -386,6 +449,7 @@
     closeStartMenu();
     closeWindow(settingsWindow);
     hideStartHint();
+    if (!pinballWindow.hidden) minimizePinball();
 
     screensaverActive = true;
     screensaverStartedAt = performance.now();
@@ -481,6 +545,7 @@
     hideStartHint();
     closeWindow(settingsWindow);
     closeWindow(aboutWindow);
+    if (!pinballWindow.hidden) closePinball();
     shutdownScreen.hidden = false;
     shutdownScreen.focus({ preventScroll: true });
   }
@@ -512,6 +577,8 @@
         closeSettings();
       } else if (!aboutWindow.hidden) {
         closeAbout();
+      } else if (!pinballWindow.hidden) {
+        closePinball();
       }
     }
   });

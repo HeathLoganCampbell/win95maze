@@ -411,6 +411,109 @@ input[type="checkbox"]:checked::after {
 
 .about-credit a { color: #0000c0; }
 
+/* ---------------------------------------------------------------- pinball */
+
+#pinballWindow {
+  width: min(430px, calc(62.5vh - 76px), calc(100vw - 8px));
+}
+
+.pinball-body {
+  padding: 4px 5px 5px;
+}
+
+.pinball-hud {
+  display: flex;
+  gap: 2px;
+  margin-bottom: 4px;
+  padding: 3px 4px;
+  background: #070b14;
+  border: 1px solid;
+  border-color: var(--shadow) var(--white) var(--white) var(--shadow);
+}
+
+.pb-stat {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 1px 3px 2px;
+  text-align: center;
+  border-right: 1px solid #1c2a40;
+}
+
+.pb-stat:last-child { border-right: 0; }
+
+.pb-stat span {
+  display: block;
+  color: #61728d;
+  font-size: 8px;
+  letter-spacing: .7px;
+  line-height: 10px;
+  text-transform: uppercase;
+}
+
+.pb-stat b {
+  display: block;
+  overflow: hidden;
+  color: #ff6242;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 17px;
+  text-overflow: ellipsis;
+  text-shadow: 0 0 7px rgba(255, 74, 40, .75);
+  white-space: nowrap;
+}
+
+.pinball-stage {
+  position: relative;
+  background: #02050a;
+  border: 1px solid;
+  border-color: var(--dark) var(--white) var(--white) var(--dark);
+  line-height: 0;
+  overflow: hidden;
+}
+
+#pinballCanvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 400 / 640;
+  cursor: default;
+  outline: none;
+  touch-action: none;
+}
+
+#pinballCanvas:focus-visible {
+  outline: 1px dotted #7fd9ff;
+  outline-offset: -3px;
+}
+
+.pinball-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 3px;
+  margin-top: 4px;
+}
+
+.pb-tip {
+  flex: 1 1 120px;
+  min-width: 92px;
+  color: #303030;
+  font-size: 10px;
+  line-height: 12px;
+}
+
+.pb-button {
+  min-width: 0;
+  height: 19px;
+  padding: 1px 5px;
+  font-size: 9px;
+}
+
+.pb-button:active {
+  padding: 2px 4px 0 6px;
+}
+
 /* -------------------------------------------------------------- start menu */
 
 .start-menu {
@@ -545,6 +648,51 @@ input[type="checkbox"]:checked::after {
   border-right: 1px solid var(--white);
 }
 
+.taskbar-tasks {
+  display: flex;
+  gap: 3px;
+  min-width: 0;
+}
+
+.task-button {
+  height: 23px;
+  max-width: 176px;
+  min-width: 118px;
+  padding: 1px 6px 1px 3px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow: hidden;
+  background: var(--face);
+  border: 1px solid;
+  border-color: var(--white) var(--dark) var(--dark) var(--white);
+  box-shadow: inset 1px 1px 0 var(--face-light), inset -1px -1px 0 var(--shadow);
+  cursor: default;
+  white-space: nowrap;
+}
+
+.task-button img {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  image-rendering: pixelated;
+}
+
+.task-button span {
+  overflow: hidden;
+  font-weight: 700;
+  text-overflow: ellipsis;
+}
+
+.task-button.is-active {
+  border-color: var(--dark) var(--white) var(--white) var(--dark);
+  box-shadow: inset 1px 1px 0 var(--shadow);
+  padding: 2px 5px 0 4px;
+  background:
+    repeating-conic-gradient(var(--face) 0% 25%, var(--face-light) 0% 50%)
+    0 0 / 2px 2px;
+}
+
 .taskbar-spacer { flex: 1; }
 
 .clock {
@@ -675,10 +823,19 @@ input[type="checkbox"]:checked::after {
 @media (max-width: 560px) {
   .window { top: 44%; }
   #settingsWindow, #aboutWindow { width: calc(100vw - 12px); }
+  #pinballWindow {
+    width: min(calc(100vw - 12px), calc(62.5vh - 76px));
+  }
   .field-row > label { width: 78px; }
   select { width: 160px; }
   .start-hint { left: 96px; width: 190px; }
   .ss-hint { white-space: normal; width: 80vw; text-align: center; }
+  .task-button { min-width: 0; max-width: 120px; }
+}
+
+@media (max-height: 640px), (max-width: 340px) {
+  .pb-tip { display: none; }
+  .pinball-bar { justify-content: flex-end; }
 }
 
 @media (max-height: 430px) {
